@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Recognition - AI-Powered Diagnosis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .leaf-inline {
+            vertical-align: middle;
+            display: inline-block;
+        }
+        .shadow-green-glow {
+            box-shadow: 0 4px 24px rgba(16, 185, 129, 0.3);
+        }
+        .shadow-green-glow:hover {
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-[#fdfbf7] to-[#f4eee1] min-h-screen text-gray-900">
+
+    <div class="container mx-auto px-6 py-12 md:py-20">
+
+        <div class="text-center mb-16">
+            <h1 class="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-tight mb-6">
+                <div>Identify Plant</div>
+                <div class="flex items-center justify-center flex-wrap">
+                    <img
+                        src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800&q=80"
+                        alt="Green leaf"
+                        class="leaf-inline w-32 md:w-56 h-16 md:h-28 rounded-full object-cover mx-2 shadow-lg"
+                    >
+                    <span>Disease</span>
+                </div>
+                <div>Instantly.</div>
+            </h1>
+
+            <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed">
+                Upload a photo of your plant leaf and get instant AI-powered disease diagnosis
+                with detailed treatment recommendations and fertilizer advice.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button
+                    id="scanButton"
+                    class="bg-[#10b981] text-white font-bold text-lg px-10 py-4 rounded-full shadow-green-glow transition-all duration-300 hover:bg-[#059669] hover:scale-105 active:scale-95"
+                >
+                    Scan Leaf 🌿
+                </button>
+                <button
+                    class="bg-white text-gray-700 font-semibold text-lg px-10 py-4 rounded-full border border-gray-300 transition-all duration-300 hover:border-gray-400 hover:shadow-lg hover:scale-105 active:scale-95"
+                    onclick="document.getElementById('howItWorks').scrollIntoView({behavior: 'smooth'})"
+                >
+                    How it works ↗
+                </button>
+            </div>
+
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
+
+        <div id="loadingState" class="hidden text-center mb-16 animate-fade-in">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-xl font-semibold text-gray-700">Analyzing your plant...</p>
+            <p class="text-gray-500 mt-2">Our AI is examining leaf patterns and symptoms</p>
+        </div>
+
+        <div id="resultsSection" class="hidden animate-fade-in mb-20">
+            <div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+
+                <div class="border-b border-gray-200 pb-6 mb-8">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <h2 class="text-4xl md:text-5xl font-black text-gray-900 mb-2" id="diseaseName">
+                                Disease Name
+                            </h2>
+                            <p class="text-gray-500 text-sm uppercase tracking-wide">Analysis Report</p>
+                        </div>
+                        <div class="inline-flex items-center gap-3 bg-green-50 px-6 py-3 rounded-full">
+                            <span class="text-sm font-semibold text-gray-600 uppercase">Confidence</span>
+                            <span class="text-2xl font-black text-[#10b981]" id="confidenceValue">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-4xl">🌿</span>
+                            <h3 class="text-xl font-bold text-gray-800">Plant Details</h3>
+                        </div>
+                        <p class="text-gray-700 leading-relaxed" id="plantDetails">
+                            Loading plant information...
+                        </p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-4xl">🧪</span>
+                            <h3 class="text-xl font-bold text-gray-800">Fertilizer Recommendation</h3>
+                        </div>
+                        <p class="text-gray-700 leading-relaxed" id="fertilizerInfo">
+                            Loading fertilizer recommendations...
+                        </p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-4xl">💊</span>
+                            <h3 class="text-xl font-bold text-gray-800">Treatment & Medicine</h3>
+                        </div>
+                        <p class="text-gray-700 leading-relaxed" id="medicineInfo">
+                            Loading treatment options...
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button
+                        id="scanAgainButton"
+                        class="bg-gray-900 text-white font-semibold px-8 py-3 rounded-full hover:bg-gray-800 transition-all duration-300 hover:scale-105"
+                    >
+                        Scan Another Plant
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="howItWorks" class="max-w-4xl mx-auto mt-32 mb-20">
+            <h2 class="text-4xl md:text-6xl font-black text-center mb-12">How It Works</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-5xl mb-4">📸</div>
+                    <h3 class="text-2xl font-bold mb-3">1. Capture</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Take a clear photo of the affected plant leaf using your camera or upload an existing image.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-5xl mb-4">🤖</div>
+                    <h3 class="text-2xl font-bold mb-3">2. Analyze</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Our advanced AI model trained on thousands of plant images identifies diseases instantly.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-5xl mb-4">🌱</div>
+                    <h3 class="text-2xl font-bold mb-3">3. Treat</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Receive detailed treatment plans, fertilizer recommendations, and care instructions.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center text-gray-500 mt-20 pb-8">
+            <p class="text-sm">
+                Powered by TensorFlow & FastAPI | Plant Disease Recognition AI
+            </p>
+            <p class="text-xs mt-2">
+                For educational and informational purposes. Consult agricultural experts for critical decisions.
+            </p>
+        </footer>
+
+    </div>
+
+    <script>
+        const scanButton = document.getElementById('scanButton');
+        const scanAgainButton = document.getElementById('scanAgainButton');
+        const fileInput = document.getElementById('fileInput');
+        const loadingState = document.getElementById('loadingState');
+        const resultsSection = document.getElementById('resultsSection');
+
+        const diseaseName = document.getElementById('diseaseName');
+        const confidenceValue = document.getElementById('confidenceValue');
+        const plantDetails = document.getElementById('plantDetails');
+        const fertilizerInfo = document.getElementById('fertilizerInfo');
+        const medicineInfo = document.getElementById('medicineInfo');
+
+        scanButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        scanAgainButton.addEventListener('click', () => {
+            resultsSection.classList.add('hidden');
+            fileInput.value = '';
+        });
+
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                return;
+            }
+
+            resultsSection.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            window.scrollTo({
+                top: loadingState.offsetTop - 100,
+                behavior: 'smooth'
+            });
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                const formattedDiseaseName = data.predicted_class.replace(/___/g, ' - ').replace(/_/g, ' ');
+                diseaseName.textContent = formattedDiseaseName;
+                confidenceValue.textContent = data.confidence.toFixed(1) + '%';
+                plantDetails.textContent = data.plant_details;
+                fertilizerInfo.textContent = data.fertilizer;
+                medicineInfo.textContent = data.medicine;
+
+                loadingState.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: resultsSection.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }, 100);
+
+            } catch (error) {
+                loadingState.classList.add('hidden');
+                alert('Error analyzing image. Please ensure the API is running on http://localhost:8000 and try again.\n\nError: ' + error.message);
+                console.error('Prediction error:', error);
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Recognition</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom loading spinner wrapper */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-[#fdfbf7] to-[#f4eee1] text-gray-900 min-h-screen flex flex-col pt-12">
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-6 w-full flex-grow flex flex-col items-center">
+        
+        <!-- Hidden File Input -->
+        <input type="file" id="imageInput" accept="image/*" class="hidden" />
+
+        <!-- Hero Section -->
+        <div class="text-center mt-12 md:mt-24 w-full">
+            <h1 class="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[1.1] md:leading-tight">
+                <span class="block mb-2 md:mb-4">Identify Plant</span>
+                <span class="flex items-center justify-center gap-3 md:gap-6 flex-wrap mb-2 md:mb-4">
+                    <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=800" 
+                         alt="" 
+                         class="inline-block align-middle w-32 md:w-56 h-auto min-h-[4rem] md:min-h-[7rem] rounded-full object-cover shadow-lg bg-green-200" />
+                    <span>Disease</span>
+                </span>
+                <span class="block">Instantly.</span>
+            </h1>
+
+            <!-- Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
+                <button id="scanBtn" class="bg-[#10b981] text-white rounded-full px-10 py-4 font-bold text-xl shadow-[0_8px_30px_rgb(16,185,129,0.3)] hover:scale-105 transition-transform w-full sm:w-auto flex items-center justify-center gap-2">
+                    <span id="scanBtnText">Scan Leaf</span>
+                    <div id="loadingSpinner" class="loader hidden ml-2"></div>
+                </button>
+                <button class="bg-white border text-gray-900 border-gray-300 rounded-full px-10 py-4 font-semibold text-xl hover:bg-gray-50 transition-colors w-full sm:w-auto">
+                    How it works ↗
+                </button>
+            </div>
+        </div>
+
+        <!-- Results UI Container -->
+        <div id="resultsContainer" class="hidden w-full mt-20 mb-20 animate-fade-in-up">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row items-center justify-between mb-8 pb-6 border-b border-gray-200">
+                <h2 class="text-3xl md:text-5xl font-black tracking-tight" id="diseaseName">Tomato - Early Blight</h2>
+                <div class="mt-4 md:mt-0 bg-green-100 text-green-800 px-6 py-2 rounded-full font-bold text-lg flex items-center gap-2 border border-green-200">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Confidence: <span id="confidenceLevel">98.5%</span>
+                </div>
+            </div>
+
+            <!-- Content Grid 1/3 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Details Card -->
+                <div class="bg-[#f0fdf4] rounded-3xl p-8 border border-green-100 shadow-sm transition-transform hover:-translate-y-1">
+                    <div class="text-4xl mb-4">🌿</div>
+                    <h3 class="text-2xl font-bold mb-3 text-green-900">Details</h3>
+                    <p id="detailsText" class="text-green-800 leading-relaxed">
+                        Loading details...
+                    </p>
+                </div>
+
+                <!-- Fertilizer Card -->
+                <div class="bg-[#fefce8] rounded-3xl p-8 border border-yellow-100 shadow-sm transition-transform hover:-translate-y-1">
+                    <div class="text-4xl mb-4">🧪</div>
+                    <h3 class="text-2xl font-bold mb-3 text-yellow-900">Fertilizer</h3>
+                    <p id="fertilizerText" class="text-yellow-800 leading-relaxed">
+                        Loading fertilizer recommendations...
+                    </p>
+                </div>
+
+                <!-- Medicine Card -->
+                <div class="bg-[#eff6ff] rounded-3xl p-8 border border-blue-100 shadow-sm transition-transform hover:-translate-y-1">
+                    <div class="text-4xl mb-4">💊</div>
+                    <h3 class="text-2xl font-bold mb-3 text-blue-900">Medicine</h3>
+                    <p id="medicineText" class="text-blue-800 leading-relaxed">
+                        Loading medicine instructions...
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- UI/UX Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const scanBtn = document.getElementById('scanBtn');
+            const scanBtnText = document.getElementById('scanBtnText');
+            const imageInput = document.getElementById('imageInput');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            // DOM Elements for dynamic injection
+            const elDiseaseName = document.getElementById('diseaseName');
+            const elConfidence = document.getElementById('confidenceLevel');
+            const elDetails = document.getElementById('detailsText');
+            const elFertilizer = document.getElementById('fertilizerText');
+            const elMedicine = document.getElementById('medicineText');
+
+            // 1. Trigger hidden file input on button click
+            scanBtn.addEventListener('click', () => {
+                imageInput.click();
+            });
+
+            // 2. Listen for file selection
+            imageInput.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // UI Loading State
+                scanBtn.disabled = true;
+                scanBtnText.textContent = "Analyzing...";
+                loadingSpinner.classList.remove('hidden');
+                resultsContainer.classList.add('hidden'); // Hide results if already showing
+
+                // Prepare FormData
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    // Send POST request to FastAPI backend
+                    const response = await fetch('http://localhost:8000/predict', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    // Parse JSON and inject into DOM
+                    elDiseaseName.textContent = data.predicted_class || 'Unknown';
+                    elConfidence.textContent = data.confidence || 'N/A';
+                    elDetails.textContent = data.plant_details || 'No details available.';
+                    elFertilizer.textContent = data.fertilizer || 'No fertilizer recommendations available.';
+                    elMedicine.textContent = data.medicine || 'No medicine information available.';
+
+                    // Unhide the Results UI
+                    resultsContainer.classList.remove('hidden');
+                    
+                    // Small scroll to results for better UX
+                    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                } catch (error) {
+                    console.error('Error during prediction:', error);
+                    alert("Failed to analyze the leaf. Is your FastAPI backend running on port 8000?");
+                } finally {
+                    // Revert Loading State
+                    scanBtn.disabled = false;
+                    scanBtnText.textContent = "Scan Leaf";
+                    loadingSpinner.classList.add('hidden');
+                    // Reset input so the same file can be scanned again
+                    imageInput.value = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
